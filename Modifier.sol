@@ -10,6 +10,7 @@ contract Test {
 
     modifier onlyOwner() {
         require(msg.sender == owner, "You are not the owner");
+        // _; tells solidity where to put / run the rest of the code
         _;
     }
 
