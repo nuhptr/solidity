@@ -7,9 +7,10 @@ pragma solidity ^0.8.9;
 // 3. Create a function to get the tweets of a user
 
 contract Twitter {
-    uint16 constant MAX_TWEET_LENGTH = 280;
+    uint16 public MAX_TWEET_LENGTH = 280;
 
     struct Tweet {
+        uint256 id; // make an unique id for each tweet
         address author;
         string content;
         uint256 timestamp;
@@ -17,6 +18,20 @@ contract Twitter {
     }
 
     mapping(address => Tweet[]) public tweets;
+    address public owner;
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "You are not the owner");
+        _;
+    }
+
+    function changeTweetLenght(uint16 newTweetLenght) public onlyOwner {
+        MAX_TWEET_LENGTH = newTweetLenght;
+    }
 
     // 0. Create a twitter contract
     function createTweet(string memory _tweet) public {
@@ -24,6 +39,7 @@ contract Twitter {
         require(bytes(_tweet).length <= MAX_TWEET_LENGTH, "Tweet is too long");
 
         Tweet memory newTweet = Tweet({
+            id: tweets[msg.sender].length,
             author: msg.sender,
             content: _tweet,
             timestamp: block.timestamp,
