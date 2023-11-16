@@ -10,7 +10,7 @@ contract Twitter {
     uint16 public MAX_TWEET_LENGTH = 280;
 
     struct Tweet {
-        uint256 id; // make an unique id for each tweet
+        uint256 id; //? make an unique id for each tweet
         address author;
         string content;
         uint256 timestamp;
@@ -29,13 +29,14 @@ contract Twitter {
         _;
     }
 
+    //? add modifier to change the max tweet length
     function changeTweetLenght(uint16 newTweetLenght) public onlyOwner {
         MAX_TWEET_LENGTH = newTweetLenght;
     }
 
-    // 0. Create a twitter contract
+    //? 0. Create a twitter contract
     function createTweet(string memory _tweet) public {
-        // if tweets length <= 280 then we are good, else revert
+        //? if tweets length <= 280 then we are good, else revert
         require(bytes(_tweet).length <= MAX_TWEET_LENGTH, "Tweet is too long");
 
         Tweet memory newTweet = Tweet({
@@ -49,12 +50,19 @@ contract Twitter {
         tweets[msg.sender].push(newTweet); // msg.sender is the address of the user who calls the function
     }
 
-    // 1. Create a mapping between user and tweets
+    //? Like Tweet
+    function likeTweet() external {
+        //? 1. Get the tweet
+        //? 2. Increment the likes
+        //? 3. Save the tweet
+    }
+
+    //? 1. Create a mapping between user and tweets
     function getTweet(uint _i) public view returns (Tweet memory) {
         return tweets[msg.sender][_i];
     }
 
-    // 2. Get all tweets of a user
+    //? 2. Get all tweets of a user
     function getAllTweets(address _owner) public view returns (Tweet[] memory) {
         return tweets[_owner];
     }
