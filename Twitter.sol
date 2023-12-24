@@ -1,5 +1,20 @@
 // SPDX-License-Identifier: MIT
+
+// import "@openzeppelin/contracts/access/Ownable.sol";
+
 pragma solidity ^0.8.0;
+
+interface IProfileTwitter {
+    struct UserProfile {
+        string displayName;
+        string bio;
+    }
+
+    //* code here
+    function getProfile(
+        address _user
+    ) external view returns (UserProfile memory);
+}
 
 contract Twitter {
     //* add event logging
@@ -33,13 +48,27 @@ contract Twitter {
     }
 
     uint16 MAX_TWEETS_LENGTH = 140;
+    IProfileTwitter public profileContract;
 
     //* adding mapping
     mapping(address => Tweet[]) public tweets;
     address public owner;
 
-    constructor() {
+    constructor(address _profileContract) {
+        profileContract = IProfileTwitter(_profileContract);
         owner = msg.sender;
+    }
+
+    // ---------Modifiers---------
+    modifier onlyRegistered() {
+        IProfileTwitter.UserProfile memory profile = profileContract.getProfile(
+            msg.sender
+        );
+        require(
+            bytes(profile.displayName).length > 0,
+            "User must be registered"
+        );
+        _;
     }
 
     modifier onlyOwner() {
@@ -47,12 +76,22 @@ contract Twitter {
         _;
     }
 
-    function changeTweetLength(uint16 newTweetLength) public {
+    function changeTweetLength(uint16 newTweetLength) public onlyOwner {
         MAX_TWEETS_LENGTH = newTweetLength;
     }
 
+    //* adding function getTotalLikes
+    function sumAllLikes(address _author) external view returns (uint256) {
+        uint256 totalLikes = 0;
+
+        for (uint256 i = 0; i < tweets[_author].length; i++) {
+            totalLikes += tweets[_author][i].likes;
+        }
+        return totalLikes;
+    }
+
     //* adding function to create tweets
-    function createTweets(string memory _tweet) public {
+    function createTweets(string memory _tweet) public onlyRegistered {
         //* conditional => if tweet length is less than 140 characters are good, otherwise throw an error
         require(
             bytes(_tweet).length <= MAX_TWEETS_LENGTH,
@@ -78,7 +117,7 @@ contract Twitter {
     }
 
     //* adding function to like tweets for universal user
-    function likeTweet(address author, uint256 _id) external {
+    function likeTweet(address author, uint256 _id) external onlyRegistered {
         require(tweets[author][_id].id == _id, "Tweet does not exist");
 
         tweets[author][_id].likes++;
@@ -87,7 +126,7 @@ contract Twitter {
     }
 
     //* adding function to unlike tweets for universal user
-    function unlikeTweet(address author, uint256 _id) external {
+    function unlikeTweet(address author, uint256 _id) external onlyRegistered {
         require(tweets[author][_id].id == _id, "Tweet does not exist");
         require(tweets[author][_id].likes > 0, "Tweet has no likes");
 
